@@ -15,36 +15,34 @@ public class LoadBalancing {
      */
     public static boolean isFeasibleLoad(int[] jobSizes, int queryLoad, int p) {
         // runs in O(n) time
-        int processorsNeeded = 0;
-
-        for (int i = 0; i < jobSizes.length; i++){
-            int currentLoad = 0;
-            int newLoad = currentLoad + jobSizes[i];
-
-            while (newLoad < queryLoad && i < jobSizes.length-1){
-                currentLoad = newLoad;
-                newLoad = currentLoad + jobSizes[i];
-                i++;
-                if (jobSizes[i] > queryLoad){
-                    return false;
-                }
-            }
-            processorsNeeded++;
-
-        }
-        if (processorsNeeded > p){
+        if (jobSizes == null || jobSizes.length == 0) {
             return false;
         }
-        else{
-            return true;
+        int processorsNeeded = 1;
+
+        int totalLoad = 0;
+        for (int i = 0; i < jobSizes.length; i++){
+            totalLoad += jobSizes[i];
+            if (jobSizes[i] > queryLoad){
+                return false;
+            }
+            if (totalLoad > queryLoad){
+                processorsNeeded++;
+                totalLoad = 0;
+                i--;
+            }
         }
+        return processorsNeeded <= p;
 
     }
 
 
 
-    private static boolean validJobs(int[] jobSizes){
+    private static boolean validJobs(int[] jobSizes, int p){
         if (jobSizes.length == 0){
+            return false;
+        }
+        if (p <= 0){
             return false;
         }
         else{
@@ -101,8 +99,8 @@ public class LoadBalancing {
      * @return the maximum load for a job assignment that minimizes the maximum load
      */
     public static int findLoad(int[] jobSizes, int p) {
-        // TODO: Implement this
-        if (!validJobs(jobSizes)){
+        // TODO: runs in nLogn time
+        if (!validJobs(jobSizes,p)){
             return -1;
         }
         int begin = 0;

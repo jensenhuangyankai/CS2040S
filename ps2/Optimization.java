@@ -21,6 +21,15 @@ public class Optimization {
      */
     public static int searchMax(int[] dataArray) {
         // this runs in O(logn) time
+        if (dataArray.length == 1){
+            return dataArray[0];
+        }
+        if (dataArray.length == 0){
+            return 0;
+        }
+
+
+
         int begin = 0;
         int end = dataArray.length - 1;
 
