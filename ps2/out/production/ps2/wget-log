@@ -1,0 +1,6 @@
+--2024-01-26 22:16:36--  https://coursemology3.s3.ap-southeast-1.amazonaws.com/uploads/attachments/fa/4c/23/fa4c236782b6c5ad6c987c8b6092c38d89a788ee6be56a6729f1a0f1ed70e140.pdf?response-content-disposition=inline%3B%20filename%3D%22ps2.pdf%22
+Resolving coursemology3.s3.ap-southeast-1.amazonaws.com (coursemology3.s3.ap-southeast-1.amazonaws.com)... 3.5.148.109, 3.5.148.137, 52.219.36.99, ...
+Connecting to coursemology3.s3.ap-southeast-1.amazonaws.com (coursemology3.s3.ap-southeast-1.amazonaws.com)|3.5.148.109|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2024-01-26 22:16:36 ERROR 400: Bad Request.
+
