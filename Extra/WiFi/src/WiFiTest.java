@@ -4,14 +4,14 @@ public class WiFiTest {
 
     @org.junit.Test
     public void computeDistance() {
-        int[] houses = {1, 3, 10};
+        int[] houses = {1, 3, 10,14};
         int numAccessPoints = 2;
-        assertEquals(1.0, WiFi.computeDistance(houses, numAccessPoints), 0.5);
+        assertEquals(2.0, WiFi.computeDistance(houses, numAccessPoints), 0.5);
     }
 
     @org.junit.Test
     public void coverable1() {
-        int[] houses = {1, 3, 10};
+        int[] houses = {1, 3, 10,11};
         int numAccessPoints = 2;
         assertTrue(WiFi.coverable(houses, numAccessPoints, 1.0));
     }

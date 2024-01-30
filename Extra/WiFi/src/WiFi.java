@@ -1,12 +1,29 @@
 import java.util.Arrays;
 
 class WiFi {
+    public static double roundToHalf(double d) {
+        return Math.round(d * 2) / 2.0;
+    }
 
     /**
      * Implement your solution here
      */
     public static double computeDistance(int[] houses, int numOfAccessPoints) {
-        return 0.0;
+        double begin = 0;
+        Arrays.sort(houses);
+        double end = houses[houses.length-1] - houses[0];
+
+        while (begin < end){
+            double mid = (end+begin)/2;
+            if (coverable(houses, numOfAccessPoints, mid)){
+                end = mid;
+            }
+            else {
+                begin = roundToHalf(mid);
+            }
+        }
+        return end;
+
     }
 
     /**
@@ -21,11 +38,15 @@ class WiFi {
 
         for (int i = 0; i < houses.length; i++){
             int house0 = houses[i];
-            if (i < houses.length-1){
-                while (houses[i+1] - house0 < distanceCovered){
+            while (i < houses.length-1){
+                if (houses[i+1] - house0 <= distanceCovered){
                     i++;
                 }
-                apNeeded++;
+                else{
+                    apNeeded++;
+                    break;
+                }
+
             }
         }
         if (apNeeded > numOfAccessPoints) {
