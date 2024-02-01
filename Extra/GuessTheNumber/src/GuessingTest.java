@@ -11,7 +11,6 @@ public class GuessingTest {
     public void guess() {
         Random r = new Random();
         int hiddenNumber = r.nextInt(1001);
-
         Guessing g = new Guessing();
 
         int remainingGuesses = 10;
