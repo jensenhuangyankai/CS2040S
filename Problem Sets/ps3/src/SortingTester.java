@@ -2,7 +2,7 @@ import java.util.Random;
 
 public class SortingTester {
     public static boolean checkSort(ISort sorter, int size) {
-        // TODO: implement this
+
         return false;
     }
 
