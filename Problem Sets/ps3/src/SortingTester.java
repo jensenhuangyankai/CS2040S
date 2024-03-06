@@ -3,7 +3,6 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class SortingTester {
-
     /*
     private static void bubbleSort(KeyValuePair[] arr, int size){
         boolean swapped = false;
@@ -50,7 +49,7 @@ public class SortingTester {
                 return false;
             }
         }
-        for (KeyValuePair val: testArray) System.out.println(val.toString());
+        //for (KeyValuePair val: testArray) System.out.println(val.toString());
         return true;
         //bubbleSort(copy,size);
 
@@ -63,6 +62,7 @@ public class SortingTester {
         //return Arrays.equals(testArray, copy);
     }
 
+    /*
     public static boolean isStable(ISort sorter, int size) {
         // TODO: implement this
         return false;
@@ -75,5 +75,5 @@ public class SortingTester {
 
         //System.out.println(checkSort(new SorterB(), 3));
     }
-
+    */
 }
