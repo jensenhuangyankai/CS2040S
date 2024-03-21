@@ -39,6 +39,9 @@ public class TextGeneratorTest {
         }
 
         // n characters compared, since println might have been used resulting in newline character at the end
+        //System.out.println(testOutput.toString());
+
+        //assertEquals("abaadadsasdaslo", testOutput.toString());
         assertEquals("abaadadsasdaslo", testOutput.toString().substring(0, 15));
     }
 
@@ -55,6 +58,7 @@ public class TextGeneratorTest {
             e.printStackTrace();
         }
 
+        //assertEquals("abaadadsasdasnb", testOutput.toString());
         // n characters compared, since println might have been used resulting in newline character at the end
         assertEquals("abaadadsasdasnb", testOutput.toString().substring(0, 15));
     }

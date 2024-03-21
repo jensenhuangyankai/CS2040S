@@ -1,3 +1,6 @@
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -10,11 +13,14 @@ import java.util.Random;
  */
 public class MarkovModel {
 
+	private int order;
 	// Use this to generate random numbers as needed
 	private Random generator = new Random();
 
 	// This is a special symbol to indicate no character
 	public static final char NOCHARACTER = (char) 0;
+
+	private Map<String, Integer[]> hashmap;
 
 	/**
 	 * Constructor for MarkovModel class.
@@ -24,7 +30,7 @@ public class MarkovModel {
 	 */
 	public MarkovModel(int order, long seed) {
 		// Initialize your class here
-
+		this.order = order;
 		// Initialize the random number generator
 		generator.setSeed(seed);
 	}
@@ -34,20 +40,54 @@ public class MarkovModel {
 	 */
 	public void initializeText(String text) {
 		// Build the Markov model here
+		hashmap = new HashMap<>();
+		for (int i = 0; i < text.length() - order ; i ++) {
+			String substr = text.substring(i, i + order);
+
+			Integer[] zeroArray = new Integer[256];
+			Arrays.fill(zeroArray, 0);
+			Integer[] value = hashmap.getOrDefault(substr, zeroArray);
+			value[text.charAt(i + order)] += 1;
+			hashmap.put(substr, value);
+		}
+
 	}
 
 	/**
 	 * Returns the number of times the specified kgram appeared in the text.
 	 */
 	public int getFrequency(String kgram) {
-		return 0;
+		if (kgram.length() != order) {
+			return 0;
+		}
+
+		Integer[] values =  hashmap.get(kgram);
+		if (values == null) return 0;
+		int freq = 0;
+		for (int i = 1; i < 256; i++) {
+			if (values[i] != null) {
+				freq += values[i];
+			}
+		}
+		return freq;
+
 	}
 
 	/**
 	 * Returns the number of times the character c appears immediately after the specified kgram.
 	 */
 	public int getFrequency(String kgram, char c) {
-		return 0;
+		if (kgram.length() != order) {
+			return 0;
+		}
+		if (hashmap.get(kgram) == null) {
+			return 0;
+		}
+
+		else {
+			return hashmap.get(kgram)[c];
+		}
+
 	}
 
 	/**
@@ -58,6 +98,17 @@ public class MarkovModel {
 	public char nextCharacter(String kgram) {
 		// See the problem set description for details
 		// on how to make the random selection.
-		return 'a';
+		int noOfChars = getFrequency(kgram);
+		if (noOfChars == 0){
+			return NOCHARACTER;
+		}
+
+		int random = generator.nextInt(noOfChars);
+		Integer[] arr = hashmap.get(kgram);
+		for (int i = 1 ; i < 256; i++){
+			if (random - arr[i] < 0) return (char) i;
+			else random = random - arr[i];
+		}
+		return NOCHARACTER;
 	}
 }
