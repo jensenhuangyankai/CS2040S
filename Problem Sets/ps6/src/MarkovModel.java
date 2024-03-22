@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,8 @@ public class MarkovModel {
 	// This is a special symbol to indicate no character
 	public static final char NOCHARACTER = (char) 0;
 
-	private Map<String, Integer[]> hashmap;
+	private Map<String, Integer[]> hashmap; //hashmap of kgram to frequency of each ascii value
+
 
 	/**
 	 * Constructor for MarkovModel class.
@@ -48,6 +50,7 @@ public class MarkovModel {
 			Arrays.fill(zeroArray, 0);
 			Integer[] value = hashmap.getOrDefault(substr, zeroArray);
 			value[text.charAt(i + order)] += 1;
+			value[0] += 1;
 			hashmap.put(substr, value);
 		}
 
@@ -63,12 +66,7 @@ public class MarkovModel {
 
 		Integer[] values =  hashmap.get(kgram);
 		if (values == null) return 0;
-		int freq = 0;
-		for (int i = 1; i < 256; i++) {
-			if (values[i] != null) {
-				freq += values[i];
-			}
-		}
+		int freq = values[0];
 		return freq;
 
 	}
