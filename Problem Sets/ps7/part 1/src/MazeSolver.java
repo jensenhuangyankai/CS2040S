@@ -116,7 +116,7 @@ public class MazeSolver implements IMazeSolver {
 					//System.out.println(p);
 					maze.getRoom(p.x, p.y).onPath = true;
 				}
-				return path.size();
+				return path.size() - 1 ;
 			}
 
 
@@ -139,7 +139,6 @@ public class MazeSolver implements IMazeSolver {
 
 				}
 			}
-			//System.out.println(queue.toString());
 
 		}
 		return null;
@@ -147,10 +146,14 @@ public class MazeSolver implements IMazeSolver {
 
 	@Override
 	public Integer numReachable(int k) throws Exception {
+		if (k == 0) return 1;
+		//if (k < 0) {
+		//	throw new Exception();
+		//}
 		this.queue = new LinkedList<>();
 		this.visited = new HashMap<>();
 
-		Pair initialPair = new Pair(startRow, startCol);
+		Pair initialPair = new Pair(this.startRow, this.startCol);
 		ArrayList<Pair> path = new ArrayList<>();
 		path.add(initialPair);
 		queue.add(path);
@@ -158,14 +161,16 @@ public class MazeSolver implements IMazeSolver {
 		int sum = 0;
 
 		while (!queue.isEmpty()) {
+
 			path = queue.remove();
 			Pair last = path.get(path.size() - 1);
-			visited.put(last, true);
 
-			if (path.size()-1 == k) {
+
+			if (path.size()-1 == k && !visited.getOrDefault(last, false)) {
+				//System.out.println(last);
 				sum += 1;
 			}
-
+			visited.put(last, true);
 			//if each of the walls do not exist, add each path to the queue
 			for (int direction = 0; direction < 4; direction++) {
 				Integer newX = last.x + DELTAS[direction][0];
@@ -181,8 +186,6 @@ public class MazeSolver implements IMazeSolver {
 			}
 
 		}
-
-
 		return sum;
 	}
 
@@ -190,13 +193,13 @@ public class MazeSolver implements IMazeSolver {
 		// Do remember to remove any references to ImprovedMazePrinter before submitting
 		// your code!
 		try {
-			Maze maze = Maze.readMaze("maze-sample.txt");
-			MazePrinter.printMaze(maze);
+			Maze maze = Maze.readMaze("maze-empty.txt");
+			//MazePrinter.printMaze(maze);
 
 			IMazeSolver solver = new MazeSolver();
 			solver.initialize(maze);
 
-			System.out.println(solver.pathSearch(0, 0, 2, 3));
+			System.out.println(solver.pathSearch(0, 0, 3, 3));
 			MazePrinter.printMaze(maze);
 			//ImprovedMazePrinter.printMaze(maze,0,0);
 
@@ -207,4 +210,6 @@ public class MazeSolver implements IMazeSolver {
 			e.printStackTrace();
 		}
 	}
+
+
 }

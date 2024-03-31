@@ -1,0 +1,284 @@
+import java.util.HashSet;
+
+public class MazeSolver implements IMazeSolver {
+	private static final int NORTH = 0, SOUTH = 1, EAST = 2, WEST = 3;
+	private static int[][] DELTAS = new int[][] {
+		{ -1, 0 }, // North
+		{ 1, 0 }, // South
+		{ 0, 1 }, // East
+		{ 0, -1 } // West
+	};
+
+	private Maze maze;
+	private boolean solved;
+	private boolean[][] visited;
+
+	private Integer[][][] parent;
+
+	private int[] reachable;
+
+	private int startRow, startCol, endRow, endCol;
+
+	private int rows, cols;
+
+	private int steps;
+
+	private int pathSteps;
+
+
+	private HashSet<int[]> frontier;
+	public MazeSolver() {
+		this.solved = false;
+		this.maze = null;
+	}
+
+	@Override
+	public void initialize(Maze maze) {
+		/*
+		Initialize the maze
+		and store the number of rows and columns
+		 */
+		this.maze = maze;
+		this.rows = maze.getRows();
+		this.cols = maze.getColumns();
+		this.visited = new boolean[rows][cols];
+
+	}
+
+	@Override
+	public Integer pathSearch(int startRow, int startCol, int endRow, int endCol) throws Exception {
+
+		/*
+		Throw an exception if the maze hasn't yet been initialized
+		 */
+		if (this.maze == null) {
+			throw new Exception("The maze hasn't been initialized yet!");
+		}
+
+		/*
+		Throw an exception if start or the endpoint is negative
+		 */
+		if (startRow < 0 || startCol < 0 || startRow >= this.rows || startCol >= this.cols ||
+				endRow < 0 || endCol < 0 || endRow >= this.rows || endCol >= this.cols) {
+			throw new Exception("Invalid start/end coordinate");
+		}
+
+		/*
+		Save the start and the endpoint
+		 */
+		this.startRow = startRow;
+		this.startCol = startCol;
+		this.endRow = endRow;
+		this.endCol = endCol;
+
+		/*
+		Initialize the frontier and the arrays to be used for memoization
+		and reset the progress of the search algorithm
+		 */
+		this.reachable = new int[rows * cols];
+		this.parent = new Integer[rows][cols][2];
+		this.frontier = new HashSet<>();
+		this.solved = false;
+		this.steps = 0;
+
+		/*
+		Reset the arrays used for memoization
+		and the onPath status of every room in the maze
+		 */
+		for (int i = 0; i < maze.getRows(); ++i) {
+			for (int j = 0; j < maze.getColumns(); ++j) {
+				this.visited[i][j] = false;
+				maze.getRoom(i, j).onPath = false;
+			}
+		}
+
+		/*
+		Start the bfs search algorithm with the starting point in the frontier
+		 */
+		int[] startCoord = new int[] {startRow, startCol};
+		this.frontier.add(startCoord);
+		bfsPathSearch();
+
+		/*
+		Return how many steps it took if the endpoint has been found
+		else return null
+		 */
+		return this.solved ? this.pathSteps : null;
+	}
+
+	/*
+	Perform a breadth-first search on the maze
+	so that if the shortest path is of length 'k',
+	it can be found on the kth iteration of the search algorithm
+
+	Instead of terminating the algorithm once a path has been found
+	run the algorithm until the frontier is completely empty
+	in order to memoize how many cells are certain distances away from the start
+	and make the numReachable() method calls take O(1) time
+	*/
+
+	public void bfsPathSearch() {
+		while (!frontier.isEmpty()) {
+
+			for (int[] coord : frontier) {
+				int row = coord[0];
+				int col = coord[1];
+				/*
+				For each coordinate stored in the frontier
+				set the visited memoization matrix for that frontier as visited
+				and increment the memoization array for storing the number of cells at that distance
+				 */
+				this.visited[row][col] = true;
+				this.reachable[steps] += 1;
+
+				/*
+				If the path to the endpoint hasn't been found
+				and the current coordinate is the endpoint
+				set the solved status as true
+				and set the onPath field for this coordinate and its parent as true
+				 */
+				if (!this.solved && row == endRow && col == endCol) {
+					this.solved = true;
+					maze.getRoom(row, col).onPath = true;
+					while (parent[row][col][0] != null) {
+						Integer[] parentCoord = parent[row][col];
+						maze.getRoom(parentCoord[0], parentCoord[1]).onPath = true;
+						row = parentCoord[0];
+						col = parentCoord[1];
+					}
+					this.pathSteps = this.steps;
+				}
+			}
+
+				/*
+				For the current coordinate
+				iterate in all four directions (north, south, east, west)
+				to check if moving in that direction is possible
+
+				If it is, add the cell in that direction to the frontier
+				if it hasn't been visited yet
+				 */
+				HashSet<int[]> nextFrontier = new HashSet<int[]>();
+				for (int[] coord : frontier) {
+					int row = coord[0];
+					int col = coord[1];
+					for (int direction = 0; direction < 4; direction++) {
+						switch (direction) {
+							case NORTH:
+								if (maze.getRoom(row, col).hasNorthWall()) continue;
+								break;
+							case SOUTH:
+								if (maze.getRoom(row, col).hasSouthWall()) continue;
+								break;
+							case EAST:
+								if (maze.getRoom(row, col).hasEastWall()) continue;
+								break;
+							case WEST:
+								if (maze.getRoom(row, col).hasWestWall()) continue;
+								break;
+						}
+						int newRow = row + DELTAS[direction][0];
+						int newCol = col + DELTAS[direction][1];
+						if (!visited[newRow][newCol]) {
+							visited[newRow][newCol] = true;
+							parent[newRow][newCol] = new Integer[]{row, col};
+							nextFrontier.add(new int[]{newRow, newCol});
+						}
+					}
+				}
+			this.steps += 1;
+			this.frontier = nextFrontier;
+		}
+	}
+
+	/*
+	Return the number of reachable cells based on the given distance
+	by checking the memoization array at that distance index
+	 */
+	@Override
+	public Integer numReachable(int k) throws Exception {
+		/*
+		Throw an exception if the given distance is less than 0
+		as the distance can't be negative
+		 */
+		if (k < 0) throw new Exception("k should be greater than 0!");
+
+		/*
+		The longest distance from one cell to another is the product of row and the columns minus one
+		If the given distance is equal to or greater than that, return 0
+		 */
+		if (k >= this.reachable.length) {
+			return 0;
+		}
+
+		/*
+		Return the number of cells stored at the index of the distance
+		of the memoization array
+		 */
+		return this.reachable[k];
+	}
+
+	public static void main(String[] args) {
+		// Do remember to remove any references to ImprovedMazePrinter before submitting
+		// your code!
+		try {
+			Maze maze = Maze.readMaze("maze-empty.txt");
+			IMazeSolver solver = new MazeSolver();
+			solver.initialize(maze);
+
+			System.out.println(solver.pathSearch(2, 2, 2, 2));
+			//ImprovedMazePrinter.printMaze(maze, 0, 1);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+
+			System.out.println("");
+
+			System.out.println(solver.pathSearch(0, 1, 2, 3));
+			//ImprovedMazePrinter.printMaze(maze, 0, 1);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+
+			System.out.println("");
+
+			System.out.println(solver.pathSearch(0, 1, 3, 4));
+			//ImprovedMazePrinter.printMaze(maze, 0, 1);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+
+			System.out.println("");
+
+			System.out.println(solver.pathSearch(0, 0, 1, 3));
+			//ImprovedMazePrinter.printMaze(maze, 0, 0);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+
+			System.out.println("");
+
+			System.out.println(solver.pathSearch(0, 0, 4, 3));
+			ImprovedMazePrinter.printMaze(maze, 0, 0);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+
+			System.out.println("");
+
+			System.out.println(solver.pathSearch(-1, 1, 4, 3));
+			ImprovedMazePrinter.printMaze(maze, 0, 1);
+
+			for (int i = 0; i <= 9; ++i) {
+				System.out.print(" " + solver.numReachable(i));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
