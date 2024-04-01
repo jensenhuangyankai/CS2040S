@@ -226,6 +226,7 @@ public class MazeSolver implements IMazeSolver {
 			IMazeSolver solver = new MazeSolver();
 			solver.initialize(maze);
 
+			System.out.println(solver.pathSearch(1, 1, 1, 1));
 			System.out.println(solver.pathSearch(2, 2, 2, 2));
 			//ImprovedMazePrinter.printMaze(maze, 0, 1);
 

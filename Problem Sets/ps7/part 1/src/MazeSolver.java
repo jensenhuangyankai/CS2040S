@@ -1,15 +1,15 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class MazeSolver implements IMazeSolver {
-	private class Pair{
+	private class Node{
 		Integer x;
 		Integer y;
-		Pair(Integer x, Integer y) {
+		Integer stepsTaken;
+		Node(Integer x, Integer y, Integer stepsTaken) {
 			this.x = x;
 			this.y = y;
+			this.stepsTaken = stepsTaken;
 		}
 
 		@Override
@@ -22,11 +22,11 @@ public class MazeSolver implements IMazeSolver {
 			if (this == o) {
 				return true;
 			}
-			if (!(o instanceof Pair)) {
+			if (!(o instanceof Node)) {
 				return false;
 			}
 
-			final Pair pair = (Pair) o;
+			final Node pair = (Node) o;
 
 			if (x != pair.x) {
 				return false;
@@ -55,22 +55,29 @@ public class MazeSolver implements IMazeSolver {
 	};
 
 	private Maze maze;
-	Queue<ArrayList<Pair>> queue;
-	HashMap<Pair,Boolean> visited;
+	Queue<Node> queue;
+	HashMap<Node,Boolean> visited;
+	HashMap<Node, Node> parent;
 	Integer startRow;
 	Integer startCol;
+	private int rows, cols;
+
+
+	HashMap<Integer, Integer> kFrontiers; //this is to store the number of things you can reach with k
 
 	public MazeSolver() {
-		// TODO: Initialize variables.
 		this.maze = null;
 	}
 
 	@Override
 	public void initialize(Maze maze) {
-		// TODO: Initialize the solver.
 		this.maze = maze;
 		this.queue = new LinkedList<>();
 		this.visited = new HashMap<>();
+		this.rows = maze.getRows();
+		this.cols = maze.getColumns();
+		this.kFrontiers = new HashMap<>();
+		this.parent = new HashMap<>();
 	}
 
 	private boolean canGo(int row, int col, int dir) {
@@ -93,100 +100,100 @@ public class MazeSolver implements IMazeSolver {
 		return false;
 	}
 
+	private ArrayList<Node> backTrace(HashMap<Node, Node> parent, Node node) {
+		//System.out.println(node);
+		ArrayList<Node> path = new ArrayList<>();
+		//System.out.println(node.x + " " + startCol + " " + node.y + " " + startRow);
+		while (node.x != startRow || node.y != startCol) {
+			path.add(node);
+			node = parent.get(node);
+			//System.out.println(node);
+		}
+		path.add(node);
+
+		Collections.reverse(path);
+
+		return path;
+	}
+
+
+
 	//im assuming we're using bfs
 	@Override
 	public Integer pathSearch(int startRow, int startCol, int endRow, int endCol) throws Exception {
+		for (int i = 0; i < maze.getRows(); ++i) {
+			for (int j = 0; j < maze.getColumns(); ++j) {
+				maze.getRoom(i, j).onPath = false;
+			}
+		}
+		this.visited = new HashMap<>();
+		this.queue = new LinkedList<>();
+		this.kFrontiers = new HashMap<>();
 		this.startRow = startRow;
 		this.startCol = startCol;
+		this.parent = new HashMap<>();
 
-		Pair initialPair = new Pair(startRow, startCol);
-		ArrayList<Pair> path = new ArrayList<>();
-		path.add(initialPair);
-		queue.add(path);
-		visited.put(initialPair, true);
-
-		while (!queue.isEmpty()) {
-			path = queue.remove();
-			Pair last = path.get(path.size() - 1);
-			visited.put(last, true);
-			//System.out.println(last.toString());
-			if (last.x == endRow && last.y == endCol) {
-				//System.out.println("--------------------------------------------------------");
-				for (Pair p: path) {
-					//System.out.println(p);
-					maze.getRoom(p.x, p.y).onPath = true;
-				}
-				return path.size() - 1 ;
-			}
-
-
-//			System.out.println("block has North wall: " + maze.getRoom(last.x, last.y).hasNorthWall());
-//			System.out.println("block has South wall: "  + maze.getRoom(last.x, last.y).hasSouthWall());
-//			System.out.println("block has East wall: "  + maze.getRoom(last.x, last.y).hasEastWall());
-//			System.out.println("block has West wall: "  + maze.getRoom(last.x, last.y).hasWestWall());
-
-			//if each of the walls do not exist, add each path to the queue
-			for (int direction = 0; direction < 4; direction++) {
-				Integer newX = last.x + DELTAS[direction][0];
-				Integer newY =  last.y + DELTAS[direction][1];
-				Pair newPair = new Pair(newX, newY);
-
-				if (canGo(last.x, last.y, direction) && !visited.getOrDefault(newPair, false)) {
-					path.add(newPair); 						//add last element
-
-					queue.add(new ArrayList<>(path));		//add to main queue
-					path.remove(newPair);
-
-				}
-			}
-
+		if (startRow < 0 || startCol < 0 || startRow >= this.rows || startCol >= this.cols ||
+				endRow < 0 || endCol < 0 || endRow >= this.rows || endCol >= this.cols) {
+			throw new Exception("Invalid start/end coordinate");
 		}
-		return null;
+		if (this.maze == null) {
+			throw new Exception("Initialise maze first");
+		}
+
+		Node initialPair = new Node(startRow, startCol, 0);
+		visited.put(initialPair, true);
+		queue.add(initialPair);
+
+		ArrayList<ArrayList<Node>> pathsList = new ArrayList<>();
+		while (!queue.isEmpty()) {
+			Node node = queue.remove();
+			visited.put(node, true);
+
+			if (node.x == endRow && node.y == endCol) {
+				pathsList.add(backTrace(parent, node));
+			}
+
+			for (int direction = 0; direction < 4; ++direction) {
+				Integer newX = node.x + DELTAS[direction][0];
+				Integer newY = node.y + DELTAS[direction][1];
+				Integer newStepsTaken = node.stepsTaken + 1;
+				Node newNode = new Node(newX, newY, newStepsTaken);
+				if (canGo(node.x, node.y, direction) && !visited.getOrDefault(newNode, false)) {
+					if (!queue.contains(newNode)){
+						kFrontiers.put(newNode.stepsTaken, kFrontiers.getOrDefault(newNode.stepsTaken,0) + 1); //calculation for next qn
+						parent.put(newNode, node); //set parent of newpair to be node
+						queue.add(newNode);
+					}
+
+				}
+			}
+		}
+
+		if (pathsList.size() != 0) {
+			ArrayList<Node> finalPath = pathsList.get(0);
+			for (ArrayList<Node> p: pathsList) {
+				if (p.size() < finalPath.size()) {
+					finalPath = p;
+				}
+			}
+			for (Node node : finalPath) {
+				maze.getRoom(node.x, node.y).onPath = true;
+			}
+			return finalPath.size() - 1;
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public Integer numReachable(int k) throws Exception {
 		if (k == 0) return 1;
-		//if (k < 0) {
-		//	throw new Exception();
-		//}
-		this.queue = new LinkedList<>();
-		this.visited = new HashMap<>();
-
-		Pair initialPair = new Pair(this.startRow, this.startCol);
-		ArrayList<Pair> path = new ArrayList<>();
-		path.add(initialPair);
-		queue.add(path);
-		visited.put(initialPair, true);
-		int sum = 0;
-
-		while (!queue.isEmpty()) {
-
-			path = queue.remove();
-			Pair last = path.get(path.size() - 1);
-
-
-			if (path.size()-1 == k && !visited.getOrDefault(last, false)) {
-				//System.out.println(last);
-				sum += 1;
-			}
-			visited.put(last, true);
-			//if each of the walls do not exist, add each path to the queue
-			for (int direction = 0; direction < 4; direction++) {
-				Integer newX = last.x + DELTAS[direction][0];
-				Integer newY = last.y + DELTAS[direction][1];
-				Pair newPair = new Pair(newX, newY);
-
-				if (canGo(last.x, last.y, direction) && !visited.getOrDefault(newPair, false)) {
-					path.add(newPair);                        //add last element
-					queue.add(new ArrayList<>(path));        //add to main queue
-					path.remove(newPair);
-
-				}
-			}
-
+		if (k < 0) {
+			throw new Exception("no.");
 		}
-		return sum;
+		return kFrontiers.getOrDefault(k,0);
 	}
 
 	public static void main(String[] args) {
@@ -199,7 +206,7 @@ public class MazeSolver implements IMazeSolver {
 			IMazeSolver solver = new MazeSolver();
 			solver.initialize(maze);
 
-			System.out.println(solver.pathSearch(0, 0, 3, 3));
+			System.out.println(solver.pathSearch(0, 0,3,3));
 			MazePrinter.printMaze(maze);
 			//ImprovedMazePrinter.printMaze(maze,0,0);
 
