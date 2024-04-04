@@ -61,8 +61,6 @@ public class MazeSolver implements IMazeSolver {
 	Integer startRow;
 	Integer startCol;
 	private int rows, cols;
-
-
 	HashMap<Integer, Integer> kFrontiers; //this is to store the number of things you can reach with k
 
 	public MazeSolver() {
@@ -141,9 +139,9 @@ public class MazeSolver implements IMazeSolver {
 			throw new Exception("Initialise maze first");
 		}
 
-		Node initialPair = new Node(startRow, startCol, 0);
-		visited.put(initialPair, true);
-		queue.add(initialPair);
+		Node initialNode = new Node(startRow, startCol, 0);
+		visited.put(initialNode, true);
+		queue.add(initialNode);
 
 		ArrayList<ArrayList<Node>> pathsList = new ArrayList<>();
 		while (!queue.isEmpty()) {
@@ -168,6 +166,7 @@ public class MazeSolver implements IMazeSolver {
 
 				}
 			}
+
 		}
 
 		if (pathsList.size() != 0) {
