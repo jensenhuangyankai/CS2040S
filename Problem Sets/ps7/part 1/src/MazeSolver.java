@@ -108,7 +108,7 @@ public class MazeSolver implements IMazeSolver {
 			//System.out.println(node);
 		}
 		path.add(node);
-
+		//System.out.println(path);
 		Collections.reverse(path);
 
 		return path;
@@ -199,17 +199,17 @@ public class MazeSolver implements IMazeSolver {
 		// Do remember to remove any references to ImprovedMazePrinter before submitting
 		// your code!
 		try {
-			Maze maze = Maze.readMaze("maze-empty.txt");
+			Maze maze = Maze.readMaze("maze-sample.txt");
 			//MazePrinter.printMaze(maze);
 
 			IMazeSolver solver = new MazeSolver();
 			solver.initialize(maze);
 
-			System.out.println(solver.pathSearch(0, 0,3,3));
+			System.out.println(solver.pathSearch(2, 3, 0, 0));
 			MazePrinter.printMaze(maze);
 			//ImprovedMazePrinter.printMaze(maze,0,0);
 
-			for (int i = 0; i <= 9; ++i) {
+			for (int i = 0; i <= 12; ++i) {
 				System.out.println("Steps " + i + " Rooms: " + solver.numReachable(i));
 			}
 		} catch (Exception e) {
