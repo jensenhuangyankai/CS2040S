@@ -29,18 +29,18 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 
 			final Node node = (Node) o;
 
-			if (x != node.x) {
+			if (!Objects.equals(x, node.x)) {
 				return false;
 			}
-			if (y != node.y) {
+			if (!Objects.equals(y, node.y)) {
 				return false;
 			}
 //			if (stepsTaken != node.stepsTaken) {
 //				return false;
 //			}
-//			if (nSuperpower != node.nSuperpower) {
-//				return false;
-//			}
+			if (nSuperpower != node.nSuperpower) {
+				return false;
+			}
 
 
 			return true;
@@ -49,7 +49,7 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 		@Override
 		public int hashCode() {
 			int result = x;
-			result = 17 * x + 31 * y;// + 123*nSuperpower; //+ 12*stepsTaken;
+			result = 17 * x + 31 * y + 123*nSuperpower; //+ 12*stepsTaken;
 			return result;
 		}
 	}
@@ -74,6 +74,8 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 	private int rows, cols;
 	HashMap<Integer, Integer> kPowerFrontiers; //this is to store the number of things you can reach with k
 	HashMap<Integer, Integer> kNoPowerFrontiers;
+	HashMap<Integer, Integer> kFrontiers;
+
 
 
 	public MazeSolverWithPower() {
@@ -89,6 +91,7 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 		this.cols = maze.getColumns();
 		this.kPowerFrontiers = new HashMap<>();
 		this.kNoPowerFrontiers = new HashMap<>();
+		this.kFrontiers = new HashMap<>();
 		this.parent = new HashMap<>();
 
 	}
@@ -138,9 +141,9 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 			//System.out.println(node);
 			path.add(node);
 			List<Node> nodeList = parent.get(node);
-			Node smallestNode = new Node(0, 0, 0, Integer.MAX_VALUE);
+			Node smallestNode = new Node(0, 0, 0, Integer.MIN_VALUE);
 			for (Node n: nodeList) {
-				if (n.nSuperpower < smallestNode.nSuperpower) {
+				if (n.nSuperpower > smallestNode.nSuperpower) {
 					smallestNode = n;
 				}
 			}
@@ -164,6 +167,7 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 		this.queue = new LinkedList<>();
 		this.kPowerFrontiers = new HashMap<>();
 		this.kNoPowerFrontiers = new HashMap<>();
+		this.kFrontiers = new HashMap<>();
 		this.startRow = startRow;
 		this.startCol = startCol;
 		this.parent = new HashMap<>();
@@ -189,7 +193,12 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 			visited.put(node, true);
 
 			if (node.x == endRow && node.y == endCol) {
-				pathsList.add(backTrace(parent, node));
+				//pathsList.add(backTrace(parent, node));
+				ArrayList<Node> nodeList = backTrace(parent,node);
+				for (Node n : nodeList) {
+					maze.getRoom(n.x, n.y).onPath = true;
+				}
+				return nodeList.size();
 			}
 			System.out.println("NEW NODE_____________________");
 			for (int direction = 0; direction < 4; ++direction) {
@@ -197,14 +206,15 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 				Integer newY = node.y + DELTAS[direction][1];
 				Integer newStepsTaken = node.stepsTaken + 1;
 
-
 				Node newNode = new Node(newX, newY, newStepsTaken, node.nSuperpower);
 				if (Objects.equals(newNode.x, node.x) && Objects.equals(newNode.y, node.y)) continue;
 
-				Node temp = new Node(newX, newY, node.stepsTaken, node.nSuperpower);
+				//Node temp = new Node(newX, newY, node.stepsTaken, node.nSuperpower);
 				if (canGo(node.x, node.y, direction) && !visited.getOrDefault(newNode, false)) {
 					if (!queue.contains(newNode)){
-						kNoPowerFrontiers.put(newNode.stepsTaken, kNoPowerFrontiers.getOrDefault(newNode.stepsTaken,0) + 1); //calculation for next qn
+						//Integer lowerSteps = Math.min(kNoPowerFrontiers.getOrDefault(newNode.stepsTaken,0), kPowerFrontiers.getOrDefault(newNode.stepsTaken,0));
+						//kNoPowerFrontiers.put(newNode.stepsTaken, lowerSteps + 1); //calculation for next qn
+						kFrontiers.put(newNode.stepsTaken, kFrontiers.getOrDefault(newNode.stepsTaken,0) + 1);
 						ArrayList<Node> nodeList = parent.getOrDefault(newNode, new ArrayList<>());
 						nodeList.add(node);
 						parent.put(newNode, nodeList); //set parent of newpair to be node
@@ -214,9 +224,11 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 				}
 
 				newNode = new Node(newX, newY, newStepsTaken, node.nSuperpower - 1);
-				if (canGoWithSuperpower(node.x, node.y, direction, node.nSuperpower) && !visited.getOrDefault(temp, false)) {
+				if (canGoWithSuperpower(node.x, node.y, direction, node.nSuperpower) && !visited.getOrDefault(newNode, false)) {
 					if (!queue.contains(newNode)){
-						kPowerFrontiers.put(newNode.stepsTaken, kPowerFrontiers.getOrDefault(newNode.stepsTaken,0) + 1); //calculation for next qn
+						//Integer lowerSteps = Math.min(kNoPowerFrontiers.getOrDefault(newNode.stepsTaken,0), kPowerFrontiers.getOrDefault(newNode.stepsTaken,0));
+						//kPowerFrontiers.put(newNode.stepsTaken, lowerSteps + 1); //calculation for next qn
+						kFrontiers.put(newNode.stepsTaken, kFrontiers.getOrDefault(newNode.stepsTaken,0) + 1);
 						ArrayList<Node> nodeList = parent.getOrDefault(newNode, new ArrayList<>());
 						nodeList.add(node);
 						parent.put(newNode, nodeList); //set parent of newpair to be node
@@ -254,9 +266,11 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 			throw new Exception("no.");
 		}
 
-		System.out.println(kNoPowerFrontiers);
-		System.out.println(kPowerFrontiers);
-		return kNoPowerFrontiers.getOrDefault(k,0) + kPowerFrontiers.getOrDefault(k,0) ;
+		//System.out.println(kNoPowerFrontiers);
+		//System.out.println(kPowerFrontiers);
+		System.out.println(kFrontiers);
+		//return kNoPowerFrontiers.getOrDefault(k,0) + kPowerFrontiers.getOrDefault(k,0) ;
+		return kFrontiers.getOrDefault(k,0);
 	}
 
 
@@ -352,7 +366,7 @@ public class MazeSolverWithPower implements IMazeSolverWithPower {
 			IMazeSolverWithPower solver = new MazeSolverWithPower();
 			solver.initialize(maze);
 
-			System.out.println(solver.pathSearch(4,0, 4,4,2));
+			System.out.println(solver.pathSearch(4,0, 4,4,1));
 			ImprovedMazePrinter.printMaze(maze,4,0);
 
 			for (int i = 0; i <= 9; ++i) {
