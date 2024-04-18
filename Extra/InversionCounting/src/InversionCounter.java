@@ -1,48 +1,66 @@
+import java.util.Arrays;
+
 class InversionCounter {
 
-    public static long countSwaps(int[] arr) {
-        long inversions = 0;
-        for (int i = 0; i < arr.length; i++){
-            for (int j = i+1; j < arr.length; j++){
-                if (arr[i] > arr[j]) inversions++;
-            }
+    public static long mergeSort(int[] arr, int[] spaceArr, int begin, int end) {
+        if (begin >= end) {
+            return 0;
         }
-        return inversions;
+        long countSwap = 0;
+        int mid = begin + (end - begin) / 2;
+
+        countSwap += mergeSort(arr, spaceArr, begin, mid);
+        countSwap += mergeSort(arr, spaceArr,mid + 1, end);
+        countSwap += helper(arr, spaceArr, begin, mid, mid+1, end);
+
+        return countSwap;
+    }
+    public static long countSwaps(int[] arr) {
+        int[] temp = new int[arr.length];
+        return mergeSort(arr, temp, 0,  arr.length - 1);
     }
 
-    /**
-     * Given an input array so that arr[left1] to arr[right1] is sorted and arr[left2] to arr[right2] is sorted
-     * (also left2 = right1 + 1), merges the two so that arr[left1] to arr[right2] is sorted, and returns the
-     * minimum amount of adjacent swaps needed to do so.
-     */
+    public static long helper(int[] arr, int[] spaceArr, int left1, int right1, int left2, int right2) {
+        int start = left1;
+        int currentIndex = start;
+        long countSwap = 0;
+
+        while (left1 <= right1 && left2 <= right2) {
+            if (arr[left1] <= arr[left2]) {
+                spaceArr[currentIndex] = arr[left1];
+                left1++;
+            } else {
+                spaceArr[currentIndex] = arr[left2];
+                countSwap += (right1 - (left1 - 1));
+                left2++;
+            }
+
+            currentIndex++;
+        }
+
+        while (left2 <= right2) {
+            spaceArr[currentIndex] = arr[left2];
+            left2++;
+            currentIndex++;
+        }
+
+        while (left1 <= right1) {
+            spaceArr[currentIndex] = arr[left1];
+            left1++;
+            currentIndex++;
+        }
+        
+        //copy arr
+        for (int i = start; i <= right2; i++) {
+            arr[i] = spaceArr[i];
+        }
+
+        return countSwap;
+    }
+
     public static long mergeAndCount(int[] arr, int left1, int right1, int left2, int right2) {
-        int[] result = new int[arr.length];
-        long swaps = 0;
-
-        int counterLeft = 0;
-        int counterRight = left2;
-
-        int resultCounter = 0;
-        while (counterLeft <= right1 && counterRight <= right2){
-            if (arr[counterRight] < arr[counterLeft]) {
-                result[resultCounter] = arr[counterRight];
-                swaps += counterRight-resultCounter;
-                counterRight++;
-            }
-            else{
-                result[resultCounter] = arr[counterLeft];
-                counterLeft++;
-            }
-            resultCounter++;
-        }
-        while (counterLeft <= right1){
-            result[resultCounter++] = arr[counterLeft++];
-        }
-        while (counterRight <= right2){
-            result[resultCounter++] = arr[counterRight++];
-        }
-        arr = result;
-        return swaps;
-
+        if (arr.length == 0 || arr.length == 1) return 0;
+        int[] temp = new int[arr.length];
+        return helper(arr, temp, left1, right1, left2, right2);
     }
 }

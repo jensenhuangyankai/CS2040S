@@ -1,5 +1,7 @@
 import java.util.*;
 
+
+
 public class MazeSolverWithPower implements IMazeSolverWithPower {
 	private class Node{
 		Integer x;
